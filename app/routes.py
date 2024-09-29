@@ -57,6 +57,7 @@ class Login(Resource):
         the username and password. If the credentials are valid, returns a JSON response 
         with an access token and a 200 status code. Otherwise, returns a JSON response 
         with an error message and a 401 status code.
+        use username : admin and password : password for testing
         """
         data = request.get_json()
         username = data.get('username')
