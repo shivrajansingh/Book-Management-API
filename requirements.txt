@@ -7,3 +7,4 @@ Flask-Migrate
 flask_jwt_extended
 groq
 flask-restx
+flask_swagger_ui

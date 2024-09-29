@@ -4,6 +4,7 @@ from .util import summarize
 from flask_jwt_extended import jwt_required, create_access_token
 from flask_restx import Api, Resource, fields, Namespace
 
+
 bp = Blueprint('main', __name__)
 api = Api(bp, doc='/swagger/', title='Book Management API', version='1.0', description='API for managing books, reviews, and generating summaries')
 
@@ -50,6 +51,13 @@ api.authorizations = authorizations
 class Login(Resource):
     @api.expect(login_model, validate=True)
     def post(self):
+        """
+        Login endpoint.
+        Handles user login by accepting a POST request with a JSON payload containing 
+        the username and password. If the credentials are valid, returns a JSON response 
+        with an access token and a 200 status code. Otherwise, returns a JSON response 
+        with an error message and a 401 status code.
+        """
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')
@@ -68,6 +76,18 @@ class Books(Resource):
     @jwt_required()
     @api.doc(security='Bearer Auth')
     def get(self):
+        """
+        Get All Books.
+        Get all books from the database and return them as a JSON response.
+
+        Returns:
+            A JSON response containing a list of dictionaries, where each dictionary
+            represents a book and contains the following keys: 'id', 'title', 'author',
+            and 'description'.
+
+        Raises:
+            None.
+        """
         books = Book.query.all()
         return books
 
@@ -75,6 +95,13 @@ class Books(Resource):
     @jwt_required()
     @api.doc(security='Bearer Auth')
     def post(self):
+        """
+        Create a book
+        Handles the creation of a new book by accepting a POST request with a JSON payload 
+        containing the book's title, author, and optional description. The function then 
+        creates a new Book object, adds it to the database session, and commits the changes. 
+        It returns a JSON response with the ID of the newly created book and a 201 status code.
+        """
         data = request.get_json()
         new_book = Book(title=data['title'], author=data['author'], description=data.get('description'))
         db.session.add(new_book)
@@ -87,6 +114,16 @@ class BookDetail(Resource):
     @jwt_required()
     @api.doc(security='Bearer Auth')
     def get(self, id):
+        """
+        Get a Book.
+        Retrieves a book by its ID and returns its details as a JSON response.
+
+        Parameters:
+            id (int): The ID of the book to retrieve.
+
+        Returns:
+            A JSON response containing the book's ID, title, author, and description.
+        """
         book = Book.query.get_or_404(id)
         return book
 
@@ -95,6 +132,16 @@ class BookDetail(Resource):
     @jwt_required()
     @api.doc(security='Bearer Auth')
     def put(self, id):
+        """
+        update a book.
+        Updates a book by its ID and returns its updated details as a JSON response.
+
+        Parameters:
+            id (int): The ID of the book to update.
+
+        Returns:
+            A JSON response containing the book's ID, title, author, and description.
+        """
         book = Book.query.get_or_404(id)
         data = request.get_json()
         if 'title' in data:
@@ -109,6 +156,16 @@ class BookDetail(Resource):
     @jwt_required()
     @api.doc(security='Bearer Auth')
     def delete(self, id):
+        """
+        Delete a book.
+        Deletes a book by its ID and returns a success response.
+
+        Parameters:
+            id (int): The ID of the book to delete.
+
+        Returns:
+            An empty response with a 204 status code.
+        """
         book = Book.query.get_or_404(id)
         db.session.delete(book)
         db.session.commit()
@@ -122,6 +179,16 @@ class Reviews(Resource):
     @jwt_required()
     @api.doc(security='Bearer Auth')
     def get(self, id):
+        """
+        Get All Reviews of a Book.
+        Retrieves all reviews for a book with the given ID.
+
+        Parameters:
+            id (int): The ID of the book to retrieve reviews for.
+
+        Returns:
+            A JSON response containing a list of dictionaries, where each dictionary represents a review and contains the following keys: 'id', 'rating', and 'comment'.
+        """
         book = Book.query.get_or_404(id)
         reviews = Review.query.filter_by(book_id=book.id).all()
         return reviews
@@ -130,6 +197,17 @@ class Reviews(Resource):
     @jwt_required()
     @api.doc(security='Bearer Auth')
     def post(self, id):
+        """
+        Create a Review for a Book.
+        Creates a review for a book with the given ID and returns the ID of the created review as a JSON response.
+
+        Parameters:
+            id (int): The ID of the book to create a review for.
+
+        Returns:
+            A JSON response containing the ID of the created review.
+            The response has a status code of 201 (Created).
+        """
         book = Book.query.get_or_404(id)
         data = request.get_json()
         new_review = Review(book_id=book.id, rating=data['rating'], comment=data.get('comment'))
@@ -145,6 +223,14 @@ class Recommendations(Resource):
     @jwt_required()
     @api.doc(security='Bearer Auth')
     def get(self):
+        """
+        Get Recommendations.
+        Retrieves book recommendations based on a minimum average rating.
+        Parameters:
+            min_rating (float): The minimum average rating for a book to be recommended (default is 4.0).
+        Returns:
+            A JSON response containing a list of dictionaries, where each dictionary represents a recommended book and contains the following keys: 'id', 'title', 'author', and 'description'.
+        """
         min_rating = float(request.args.get('min_rating', 4.0))
         books = Book.query.all()
         recommendations = []
@@ -164,6 +250,20 @@ class GenerateSummary(Resource):
     @jwt_required()
     @api.doc(security='Bearer Auth')
     def post(self):
+        """
+        Generate Summary for a book content. 
+        Generates a summary for a given book content using the LLAMA3.1 Model, it uses the content to generate the summary
+
+        Parameters:
+            book_id (int): The ID of the book.
+            content (str): The content of the book.
+
+        Returns:
+            A JSON response containing the book ID and the generated summary.
+            The response has a status code of 201 (Created) if successful.
+            If the book ID or content is missing, returns a JSON error response with a 400 status code.
+            If the book is not found, returns a JSON error response with a 404 status code.
+        """
         data = request.get_json()
 
         book_id = data.get('book_id')
@@ -198,6 +298,18 @@ class GetSummary(Resource):
     @jwt_required()
     @api.doc(security='Bearer Auth')
     def get(self, id):
+        """
+        Get Summary for a book.
+        Retrieves the summary of a book with the given ID.
+
+        Parameters:
+            id (int): The ID of the book.
+
+        Returns:
+            A JSON response containing the book ID, title, author, summary, and content.
+            The response has a status code of 200 if successful.
+            If no summary is found for the book, returns a JSON error response with a 404 status code.
+        """
         book = Book.query.get_or_404(id)
         summary = Summary.query.filter_by(book_id=book.id).first()
 
