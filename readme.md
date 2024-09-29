@@ -12,6 +12,7 @@ This is a Flask-based API for managing books, reviews, and generating summaries.
   - [Reviews](#reviews)
   - [Recommendations](#recommendations)
   - [Summaries](#summaries)
+- [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -306,7 +307,7 @@ To use the API, you need to authenticate by logging in with the provided credent
     ```
 
 
-## Swagger Documentation
+## Documentation
 
 The API documentation is available at `/swagger/` endpoint. You can access it by navigating to `http://localhost:5000/swagger/` in your web browser.
 
